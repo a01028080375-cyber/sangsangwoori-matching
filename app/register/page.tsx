@@ -44,19 +44,29 @@ export default function RegisterPage() {
     setErrors({})
     setStatus('loading')
     setServerError('')
-    const { error } = await supabase.from('seniors').insert({
-      name: form.name.trim(),
-      region: form.region,
-      desired_job: form.desired_job,
-      career_years: form.career_years ? parseInt(form.career_years, 10) : 0,
-    })
+
+    const { data, error } = await supabase
+      .from('seniors')
+      .insert({
+        name: form.name.trim(),
+        region: form.region,
+        desired_job: form.desired_job,
+        career_years: form.career_years ? parseInt(form.career_years, 10) : 0,
+      })
+      .select('id')
+      .single()
+
     if (error) {
       setServerError(error.message)
       setStatus('error')
-    } else {
-      setStatus('success')
-      setForm({ name: '', region: '', desired_job: '', career_years: '' })
+      return
     }
+
+    // 등록 직후 자동 매칭 점수 계산
+    await supabase.rpc('rematch_senior', { p_senior_id: data.id })
+
+    setStatus('success')
+    setForm({ name: '', region: '', desired_job: '', career_years: '' })
   }
 
   return (
@@ -78,7 +88,7 @@ export default function RegisterPage() {
         <CardContent>
           {status === 'success' && (
             <div className="mb-6 rounded-lg border border-green-400 bg-green-100 px-6 py-4 text-xl font-semibold text-green-800">
-              등록이 완료되었습니다
+              등록이 완료되었습니다 — 추천 일자리가 자동으로 계산되었습니다.
             </div>
           )}
           {status === 'error' && (
@@ -88,7 +98,6 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            {/* 이름 */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="name" className="text-xl font-semibold">이름 *</Label>
               {errors.name && (
@@ -105,7 +114,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* 지역 */}
             <div className="flex flex-col gap-2">
               <Label className="text-xl font-semibold">지역 *</Label>
               {errors.region && (
@@ -128,7 +136,6 @@ export default function RegisterPage() {
               </Select>
             </div>
 
-            {/* 희망 직종 */}
             <div className="flex flex-col gap-2">
               <Label className="text-xl font-semibold">희망 직종 *</Label>
               {errors.desired_job && (
@@ -151,7 +158,6 @@ export default function RegisterPage() {
               </Select>
             </div>
 
-            {/* 경력 연수 */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="career_years" className="text-xl font-semibold">경력 연수</Label>
               <Input

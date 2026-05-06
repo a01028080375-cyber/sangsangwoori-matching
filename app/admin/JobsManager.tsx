@@ -36,12 +36,23 @@ export function JobsManager() {
     e.preventDefault()
     if (!form.title.trim() || !form.region || !form.job_type) return
     setSubmitting(true)
-    await supabase.from('jobs').insert({
-      title: form.title.trim(),
-      region: form.region,
-      job_type: form.job_type,
-      required_career: form.required_career ? parseInt(form.required_career, 10) : 0,
-    })
+
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert({
+        title: form.title.trim(),
+        region: form.region,
+        job_type: form.job_type,
+        required_career: form.required_career ? parseInt(form.required_career, 10) : 0,
+      })
+      .select('id')
+      .single()
+
+    if (!error && data) {
+      // 일자리 등록 직후 자동 매칭 점수 재계산
+      await supabase.rpc('rematch_job', { p_job_id: data.id })
+    }
+
     setForm({ title: '', region: '', job_type: '', required_career: '' })
     await fetchJobs()
     setSubmitting(false)
@@ -54,7 +65,6 @@ export function JobsManager() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 일자리 추가 폼 */}
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl">일자리 추가</CardTitle>
@@ -131,7 +141,6 @@ export function JobsManager() {
         </CardContent>
       </Card>
 
-      {/* 일자리 목록 */}
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl">등록된 일자리 ({jobs.length}건)</CardTitle>

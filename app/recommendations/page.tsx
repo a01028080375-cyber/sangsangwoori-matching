@@ -1,64 +1,101 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { supabase } from '@/lib/supabase'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
-export default function RecommendationsPage() {
+type Props = {
+  searchParams: Promise<{ senior_id?: string }>
+}
+
+type MatchRow = {
+  id: string
+  score: number
+  status: string
+  jobs: {
+    id: string
+    title: string
+    region: string
+    job_type: string
+    required_career: number
+  }
+}
+
+function scoreBadgeClass(score: number): string {
+  if (score >= 6) return 'bg-yellow-400 text-yellow-900'
+  if (score >= 4) return 'bg-green-500 text-white'
+  return 'bg-gray-300 text-gray-700'
+}
+
+export default async function RecommendationsPage({ searchParams }: Props) {
+  const { senior_id } = await searchParams
+
+  if (!senior_id) {
+    return (
+      <div className="flex flex-col gap-8">
+        <h1 className="text-4xl font-bold text-gray-900">추천 일자리 목록</h1>
+        <div className="rounded-lg border border-yellow-400 bg-yellow-50 px-6 py-5 text-xl text-yellow-800">
+          URL에 <code className="font-mono">?senior_id=</code> 파라미터가 필요합니다.
+        </div>
+      </div>
+    )
+  }
+
+  const { data: senior } = await supabase
+    .from('seniors')
+    .select('name, region, desired_job')
+    .eq('id', senior_id)
+    .single()
+
+  const { data: matches } = await supabase
+    .from('matches')
+    .select('id, score, status, jobs(id, title, region, job_type, required_career)')
+    .eq('senior_id', senior_id)
+    .order('score', { ascending: false })
+
+  const validMatches = (matches as MatchRow[] | null ?? []).filter(m => m.score > 0)
+
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-4xl font-bold text-gray-900">추천 일자리 목록</h1>
-        <p className="mt-2 text-xl text-gray-600">
-          회원님의 경력과 지역에 맞는 일자리를 점수 순서로 보여드립니다.
-        </p>
+        {senior && (
+          <p className="mt-2 text-xl text-gray-600">
+            {senior.name}님 ({senior.region} · {senior.desired_job}) 맞춤 추천입니다.
+          </p>
+        )}
       </div>
 
-      {/* 필터/정렬 영역 — 기능 구현 예정 */}
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border">
+      <div className="flex items-center gap-4 rounded-xl border bg-gray-50 p-4">
         <span className="text-lg font-medium text-gray-700">정렬 기준:</span>
-        <Badge variant="secondary" className="text-base px-3 py-1">
-          매칭 점수 높은 순
-        </Badge>
-        <span className="ml-auto text-lg text-gray-500">총 0건</span>
+        <Badge variant="secondary" className="text-base px-3 py-1">매칭 점수 높은 순</Badge>
+        <span className="ml-auto text-lg text-gray-500">총 {validMatches.length}건</span>
       </div>
 
-      {/* 추천 목록 — 기능 구현 시 채워질 자리 */}
-      <div className="flex flex-col gap-4">
-        <Card className="shadow-sm border-dashed">
-          <CardHeader>
-            <CardTitle className="text-2xl text-gray-400">
-              아직 추천 일자리가 없습니다.
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl text-gray-400">
-              먼저{" "}
-              <a href="/register" className="text-gray-900 underline font-semibold">
-                프로필을 등록
-              </a>
-              하시면 자동으로 알맞은 일자리를 찾아드립니다.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 추천 카드 예시 레이아웃 (기능 구현 시 map으로 렌더링 예정) */}
-      <div className="flex flex-col gap-4 opacity-30 pointer-events-none select-none">
-        <p className="text-lg font-semibold text-gray-500 border-b pb-2">
-          — 아래는 향후 표시될 카드 레이아웃 예시 —
-        </p>
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="shadow-sm">
-            <CardContent className="flex items-center justify-between p-6">
-              <div className="flex flex-col gap-1">
-                <span className="text-2xl font-bold text-gray-900">일자리 제목</span>
-                <span className="text-lg text-gray-600">지역 · 직종</span>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <Badge className="text-xl px-4 py-1">점수: 95</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {validMatches.length === 0 ? (
+        <div className="rounded-lg border border-gray-300 bg-gray-50 px-6 py-6 text-xl text-gray-500">
+          현재 매칭되는 일자리가 없습니다.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {validMatches.map(m => (
+            <Card key={m.id} className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{m.jobs.title}</span>
+                  <span className="text-lg text-gray-600">{m.jobs.region} · {m.jobs.job_type}</span>
+                  <span className="text-base text-gray-400">요구 경력 {m.jobs.required_career}년</span>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`rounded-full px-5 py-2 text-xl font-bold ${scoreBadgeClass(m.score)}`}
+                  >
+                    {m.score}점
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
-  );
+  )
 }

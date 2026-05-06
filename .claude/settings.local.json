@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "mcp__sequential-thinking__sequentialthinking",
-      "PowerShell(npm *)"
+      "PowerShell(npm *)",
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(Get-Content \"C:\\\\Users\\\\민광엽\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-----OneDrive-------sangsangwoori-matching\\\\c83fcdef-41c5-4229-8832-5b756fdcfe6a\\\\tasks\\\\bp5bkfzbp.output\" -Tail 20)",
+      "PowerShell(Start-Sleep -Seconds 10; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 5; \"Server up: $\\($r.StatusCode\\)\" } catch { \"Not ready: $_\" })",
+      "Bash(git add *)"
     ]
   }
 }

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JobsManager } from "./JobsManager";
 
 const STATUS_TABS = [
   {
@@ -80,6 +81,12 @@ export default function AdminPage() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* 일자리 관리 섹션 */}
+      <div>
+        <h2 className="mb-4 text-3xl font-bold text-gray-900">일자리 관리</h2>
+        <JobsManager />
+      </div>
     </div>
   );
 }

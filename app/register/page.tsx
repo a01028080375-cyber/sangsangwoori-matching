@@ -1,9 +1,64 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { supabase } from '@/lib/supabase'
+
+const REGIONS = ['서울', '경기', '인천', '기타'] as const
+const JOB_TYPES = ['경비', '청소', '조리', '돌봄', '기타'] as const
+
+type FormFields = {
+  name: string
+  region: string
+  desired_job: string
+  career_years: string
+}
+
+type Errors = Partial<Record<'name' | 'region' | 'desired_job', string>>
 
 export default function RegisterPage() {
+  const [form, setForm] = useState<FormFields>({ name: '', region: '', desired_job: '', career_years: '' })
+  const [errors, setErrors] = useState<Errors>({})
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [serverError, setServerError] = useState('')
+
+  function validate(): Errors {
+    const errs: Errors = {}
+    if (!form.name.trim()) errs.name = '이름을 입력해 주세요.'
+    if (!form.region) errs.region = '지역을 선택해 주세요.'
+    if (!form.desired_job) errs.desired_job = '희망 직종을 선택해 주세요.'
+    return errs
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs)
+      return
+    }
+    setErrors({})
+    setStatus('loading')
+    setServerError('')
+    const { error } = await supabase.from('seniors').insert({
+      name: form.name.trim(),
+      region: form.region,
+      desired_job: form.desired_job,
+      career_years: form.career_years ? parseInt(form.career_years, 10) : 0,
+    })
+    if (error) {
+      setServerError(error.message)
+      setStatus('error')
+    } else {
+      setStatus('success')
+      setForm({ name: '', region: '', desired_job: '', career_years: '' })
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -21,65 +76,92 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-6">
+          {status === 'success' && (
+            <div className="mb-6 rounded-lg border border-green-400 bg-green-100 px-6 py-4 text-xl font-semibold text-green-800">
+              등록이 완료되었습니다
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="mb-6 rounded-lg border border-red-400 bg-red-100 px-6 py-4 text-lg text-red-800">
+              저장 중 오류가 발생했습니다: {serverError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* 이름 */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="name" className="text-xl font-semibold">
-                이름 *
-              </Label>
+              <Label htmlFor="name" className="text-xl font-semibold">이름 *</Label>
+              {errors.name && (
+                <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
+                  {errors.name}
+                </div>
+              )}
               <Input
                 id="name"
-                name="name"
-                type="text"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="홍길동"
                 className="h-14 text-xl px-4"
-                disabled
               />
             </div>
 
             {/* 지역 */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="region" className="text-xl font-semibold">
-                거주 지역 *
-              </Label>
-              <Input
-                id="region"
-                name="region"
-                type="text"
-                placeholder="예: 서울 노원구"
-                className="h-14 text-xl px-4"
-                disabled
-              />
+              <Label className="text-xl font-semibold">지역 *</Label>
+              {errors.region && (
+                <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
+                  {errors.region}
+                </div>
+              )}
+              <Select
+                value={form.region || null}
+                onValueChange={v => setForm(f => ({ ...f, region: v ?? '' }))}
+              >
+                <SelectTrigger className="h-14 text-xl w-full">
+                  <SelectValue placeholder="지역을 선택해 주세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map(r => (
+                    <SelectItem key={r} value={r} className="text-xl py-3">{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 희망 직종 */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="desired_job" className="text-xl font-semibold">
-                희망 직종 *
-              </Label>
-              <Input
-                id="desired_job"
-                name="desired_job"
-                type="text"
-                placeholder="예: 경비원, 청소원, 요양보호사"
-                className="h-14 text-xl px-4"
-                disabled
-              />
+              <Label className="text-xl font-semibold">희망 직종 *</Label>
+              {errors.desired_job && (
+                <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
+                  {errors.desired_job}
+                </div>
+              )}
+              <Select
+                value={form.desired_job || null}
+                onValueChange={v => setForm(f => ({ ...f, desired_job: v ?? '' }))}
+              >
+                <SelectTrigger className="h-14 text-xl w-full">
+                  <SelectValue placeholder="직종을 선택해 주세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_TYPES.map(j => (
+                    <SelectItem key={j} value={j} className="text-xl py-3">{j}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 경력 연수 */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="career_years" className="text-xl font-semibold">
-                경력 연수 *
-              </Label>
+              <Label htmlFor="career_years" className="text-xl font-semibold">경력 연수</Label>
               <Input
                 id="career_years"
-                name="career_years"
                 type="number"
                 min={0}
+                value={form.career_years}
+                onChange={e => setForm(f => ({ ...f, career_years: e.target.value }))}
                 placeholder="예: 5"
                 className="h-14 text-xl px-4"
-                disabled
               />
               <p className="text-lg text-gray-500">관련 분야 총 경력 연수를 숫자로 입력해 주세요.</p>
             </div>
@@ -88,13 +170,13 @@ export default function RegisterPage() {
               type="submit"
               size="lg"
               className="h-16 text-xl font-bold mt-2"
-              disabled
+              disabled={status === 'loading'}
             >
-              등록하기
+              {status === 'loading' ? '저장 중…' : '등록하기'}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

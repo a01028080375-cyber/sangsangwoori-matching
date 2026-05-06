@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,12 +30,43 @@ export default async function RecommendationsPage({ searchParams }: Props) {
   const { senior_id } = await searchParams
 
   if (!senior_id) {
+    const { data: allSeniors } = await supabase
+      .from('seniors')
+      .select('id, name, region, desired_job')
+      .order('name')
+
     return (
       <div className="flex flex-col gap-8">
-        <h1 className="text-4xl font-bold text-gray-900">추천 일자리 목록</h1>
-        <div className="rounded-lg border border-yellow-400 bg-yellow-50 px-6 py-5 text-xl text-yellow-800">
-          URL에 <code className="font-mono">?senior_id=</code> 파라미터가 필요합니다.
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900">추천 일자리 목록</h1>
+          <p className="mt-2 text-xl text-gray-600">이름을 선택하면 해당 분의 추천 결과를 볼 수 있습니다.</p>
         </div>
+
+        {!allSeniors || allSeniors.length === 0 ? (
+          <div className="rounded-lg border border-gray-300 bg-gray-50 px-6 py-6 text-xl text-gray-500">
+            아직 등록된 시니어가 없습니다.{' '}
+            <Link href="/register" className="font-semibold text-gray-900 underline">
+              프로필 등록
+            </Link>
+            을 먼저 해주세요.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {allSeniors.map(s => (
+              <Link
+                key={s.id}
+                href={`/recommendations?senior_id=${s.id}`}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-6 py-4 shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{s.name}</span>
+                  <span className="text-lg text-gray-500">{s.region} · {s.desired_job}</span>
+                </div>
+                <span className="text-xl text-gray-400">→</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     )
   }

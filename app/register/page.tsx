@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [serverError, setServerError] = useState('')
+  const [newSeniorId, setNewSeniorId] = useState('')
 
   function validate(): Errors {
     const errs: Errors = {}
@@ -65,6 +66,7 @@ export default function RegisterPage() {
     // 등록 직후 자동 매칭 점수 계산
     await supabase.rpc('rematch_senior', { p_senior_id: data.id })
 
+    setNewSeniorId(data.id)
     setStatus('success')
     setForm({ name: '', region: '', desired_job: '', career_years: '' })
   }
@@ -87,8 +89,16 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           {status === 'success' && (
-            <div className="mb-6 rounded-lg border border-green-400 bg-green-100 px-6 py-4 text-xl font-semibold text-green-800">
-              등록이 완료되었습니다 — 추천 일자리가 자동으로 계산되었습니다.
+            <div className="mb-6 flex flex-col gap-4 rounded-lg border border-green-400 bg-green-100 px-6 py-5">
+              <p className="text-xl font-semibold text-green-800">
+                등록이 완료되었습니다 — 추천 일자리가 자동으로 계산되었습니다.
+              </p>
+              <a
+                href={`/recommendations?senior_id=${newSeniorId}`}
+                className="inline-block rounded-lg bg-green-700 px-6 py-3 text-xl font-bold text-white hover:bg-green-800 text-center"
+              >
+                내 추천 일자리 보기 →
+              </a>
             </div>
           )}
           {status === 'error' && (

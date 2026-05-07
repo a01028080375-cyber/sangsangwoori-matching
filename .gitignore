@@ -46,3 +46,9 @@ ss-*.png
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright test results
+/test-results/
+
+# supabase temp
+supabase/.temp/

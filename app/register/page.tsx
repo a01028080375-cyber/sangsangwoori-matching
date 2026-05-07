@@ -74,9 +74,9 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">프로필 등록</h1>
+        <h1 className="text-4xl font-bold text-gray-900">시니어 일자리 신청하기</h1>
         <p className="mt-2 text-xl text-gray-600">
-          회원님의 정보를 입력하시면 알맞은 일자리를 찾아드립니다.
+          정보를 입력하시면 맞는 일자리를 자동으로 찾아드립니다.
         </p>
       </div>
 
@@ -91,7 +91,7 @@ export default function RegisterPage() {
           {status === 'success' && (
             <div className="mb-6 flex flex-col gap-4 rounded-lg border border-green-400 bg-green-100 px-6 py-5">
               <p className="text-xl font-semibold text-green-800">
-                등록이 완료되었습니다 — 추천 일자리가 자동으로 계산되었습니다.
+                등록이 완료되었습니다. 담당자가 곧 연락드립니다.
               </p>
               <a
                 href={`/recommendations?senior_id=${newSeniorId}`}
@@ -110,6 +110,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name" className="text-xl font-semibold">이름 *</Label>
+              <p className="text-lg text-gray-500">성함을 알려주세요.</p>
               {errors.name && (
                 <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
                   {errors.name}
@@ -126,6 +127,7 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label className="text-xl font-semibold">지역 *</Label>
+              <p className="text-lg text-gray-500">어디에서 일하고 싶으세요?</p>
               {errors.region && (
                 <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
                   {errors.region}
@@ -148,6 +150,7 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label className="text-xl font-semibold">희망 직종 *</Label>
+              <p className="text-lg text-gray-500">어떤 일을 하시겠어요?</p>
               {errors.desired_job && (
                 <div className="rounded border border-red-400 bg-red-100 px-4 py-2 text-lg font-medium text-red-800">
                   {errors.desired_job}
@@ -170,6 +173,7 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="career_years" className="text-xl font-semibold">경력 연수</Label>
+              <p className="text-lg text-gray-500">관련 경력이 몇 년 되셨나요?</p>
               <Input
                 id="career_years"
                 type="number"
@@ -179,7 +183,6 @@ export default function RegisterPage() {
                 placeholder="예: 5"
                 className="h-14 text-xl px-4"
               />
-              <p className="text-lg text-gray-500">관련 분야 총 경력 연수를 숫자로 입력해 주세요.</p>
             </div>
 
             <Button

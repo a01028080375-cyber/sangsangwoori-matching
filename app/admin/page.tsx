@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TriangleAlert, Clock, CircleCheck } from 'lucide-react'
 import { JobsManager } from './JobsManager'
 import { supabase } from '@/lib/supabase'
 
@@ -61,9 +62,9 @@ export default async function AdminPage() {
   const assignedCount  = seniorsWithStats.filter(s => s.derivedStatus === 'assigned').length
 
   const SUMMARY_CARDS = [
-    { label: '미매칭', count: unmatchedCount, badgeClass: 'bg-red-100 text-red-700' },
-    { label: '매칭 대기', count: pendingCount, badgeClass: 'bg-yellow-100 text-yellow-700' },
-    { label: '배정 완료', count: assignedCount, badgeClass: 'bg-green-100 text-green-700' },
+    { label: '미매칭',   count: unmatchedCount, badgeClass: 'bg-red-100 text-red-700',       Icon: TriangleAlert, iconClass: 'text-red-500' },
+    { label: '매칭 대기', count: pendingCount,   badgeClass: 'bg-yellow-100 text-yellow-700', Icon: Clock,         iconClass: 'text-yellow-500' },
+    { label: '배정 완료', count: assignedCount,  badgeClass: 'bg-green-100 text-green-700',   Icon: CircleCheck,   iconClass: 'text-green-500' },
   ]
 
   return (
@@ -77,9 +78,10 @@ export default async function AdminPage() {
 
       {/* 집계 카드 */}
       <div className="grid grid-cols-3 gap-4">
-        {SUMMARY_CARDS.map(({ label, count, badgeClass }) => (
+        {SUMMARY_CARDS.map(({ label, count, badgeClass, Icon, iconClass }) => (
           <Card key={label} className="shadow-sm">
-            <CardContent className="flex flex-col items-center justify-center gap-2 py-6">
+            <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+              <Icon className={`size-10 ${iconClass}`} />
               <Badge className={`text-lg px-4 py-1 ${badgeClass}`}>{label}</Badge>
               <span className="text-5xl font-bold text-gray-900">{count}</span>
               <span className="text-lg text-gray-500">명</span>
@@ -123,7 +125,7 @@ export default async function AdminPage() {
                     <TableCell>
                       <Link
                         href={`/recommendations?senior_id=${s.id}`}
-                        className={buttonVariants({ size: 'sm', className: 'text-base' })}
+                        className={buttonVariants({ size: 'default', className: 'h-12 text-base font-semibold' })}
                       >
                         상세 보기
                       </Link>

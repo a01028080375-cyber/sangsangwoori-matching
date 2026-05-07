@@ -26,6 +26,13 @@ function scoreBadgeClass(score: number): string {
   return 'bg-gray-300 text-gray-700'
 }
 
+function scoreBadgeLabel(score: number): string {
+  if (score >= 6) return '매우 적합'
+  if (score >= 4) return '적합'
+  if (score >= 2) return '보통'
+  return ''
+}
+
 export default async function RecommendationsPage({ searchParams }: Props) {
   const { senior_id } = await searchParams
 
@@ -88,10 +95,12 @@ export default async function RecommendationsPage({ searchParams }: Props) {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">추천 일자리 목록</h1>
+        <h1 className="text-4xl font-bold text-gray-900">
+          {senior ? `${senior.name}님께 맞는 일자리` : '추천 일자리 목록'}
+        </h1>
         {senior && (
           <p className="mt-2 text-xl text-gray-600">
-            {senior.name}님 ({senior.region} · {senior.desired_job}) 맞춤 추천입니다.
+            {senior.region} · {senior.desired_job} 기준으로 찾은 맞춤 추천입니다.
           </p>
         )}
       </div>
@@ -104,28 +113,35 @@ export default async function RecommendationsPage({ searchParams }: Props) {
 
       {validMatches.length === 0 ? (
         <div className="rounded-lg border border-gray-300 bg-gray-50 px-6 py-6 text-xl text-gray-500">
-          현재 매칭되는 일자리가 없습니다.
+          <p>현재 매칭되는 일자리가 없습니다.</p>
+          <p className="mt-2 text-lg">담당자가 직접 연락드리니 잠시만 기다려 주세요.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {validMatches.map(m => (
-            <Card key={m.id} className="shadow-sm">
-              <CardContent className="flex items-center justify-between p-6">
-                <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900">{m.jobs.title}</span>
-                  <span className="text-lg text-gray-600">{m.jobs.region} · {m.jobs.job_type}</span>
-                  <span className="text-base text-gray-400">요구 경력 {m.jobs.required_career}년</span>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`rounded-full px-5 py-2 text-xl font-bold ${scoreBadgeClass(m.score)}`}
-                  >
-                    {m.score}점
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {validMatches.map(m => {
+            const label = scoreBadgeLabel(m.score)
+            return (
+              <Card key={m.id} className="shadow-sm">
+                <CardContent className="flex items-center justify-between p-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-2xl font-bold text-gray-900">{m.jobs.title}</span>
+                    <span className="text-lg text-gray-600">{m.jobs.region} · {m.jobs.job_type}</span>
+                    <span className="text-base text-gray-400">요구 경력 {m.jobs.required_career}년</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`rounded-full px-5 py-2 text-xl font-bold ${scoreBadgeClass(m.score)}`}
+                    >
+                      {m.score}점
+                    </span>
+                    {label && (
+                      <span className="text-base font-medium text-gray-600">{label}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

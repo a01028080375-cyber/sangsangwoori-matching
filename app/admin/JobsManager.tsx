@@ -24,6 +24,7 @@ export function JobsManager() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [form, setForm] = useState<JobForm>({ title: '', region: '', job_type: '', required_career: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   async function fetchJobs() {
     const { data } = await supabase.from('jobs').select('*').order('created_at', { ascending: false })
@@ -61,6 +62,7 @@ export function JobsManager() {
   async function handleDelete(id: string) {
     await supabase.from('jobs').delete().eq('id', id)
     setJobs(prev => prev.filter(j => j.id !== id))
+    setConfirmingId(null)
   }
 
   return (
@@ -167,14 +169,32 @@ export function JobsManager() {
                     <TableCell className="text-lg">{job.job_type}</TableCell>
                     <TableCell className="text-lg">{job.required_career}년</TableCell>
                     <TableCell>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="text-base font-semibold"
-                        onClick={() => handleDelete(job.id)}
-                      >
-                        삭제
-                      </Button>
+                      {confirmingId === job.id ? (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            className="h-12 text-base font-bold"
+                            onClick={() => handleDelete(job.id)}
+                          >
+                            삭제 확인
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-12 text-base"
+                            onClick={() => setConfirmingId(null)}
+                          >
+                            취소
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="destructive"
+                          className="h-12 text-base font-semibold"
+                          onClick={() => setConfirmingId(job.id)}
+                        >
+                          삭제
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
